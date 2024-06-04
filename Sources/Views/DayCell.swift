@@ -22,7 +22,8 @@ final class DayCell: JTACDayCell {
 
     lazy var circleView: UIView = {
         let view = UIView()
-        view.backgroundColor = .red
+        view.backgroundColor = .clear
+        view.layer.borderWidth = 1.6
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -86,7 +87,6 @@ final class DayCell: JTACDayCell {
         self.backgroundRangeView.backgroundColor = config.onRangeBackgroundColor
         self.backgroundRangeView.layer.cornerRadius = config.rangeViewCornerRadius
         self.selectionBackgroundView.backgroundColor = config.selectedBackgroundColor
-        self.dateLabel.font = config.dateLabelFont
         self.dateLabel.textColor = config.dateLabelColor
         if let cornerRadius = config.customSelectionViewCornerRadius {
             self.selectionBackgroundView.layer.cornerRadius = cornerRadius
@@ -277,6 +277,7 @@ final class DayCell: JTACDayCell {
 
     struct ViewConfig {
         var dateLabelText: String?
+        var dateFont: UIFont?
         var isSelectedViewHidden = true
         var isDateEnabled = true
         var rangeView = RangeViewConfig()
@@ -302,7 +303,9 @@ final class DayCell: JTACDayCell {
         } else {
             self.dateLabel.isHidden = true
         }
-
+        
+        self.dateLabel.font = config.dateFont
+        
         self.backgroundRangeView.isHidden = false
         self.backgroundRangeView.layer.maskedCorners = []
 
@@ -372,16 +375,16 @@ final class DayCell: JTACDayCell {
 
         if !viewConfig.isDateEnabled {
             self.dateLabel.textColor = todayConfig.dateLabelUnavailableColor
-            self.circleView.backgroundColor = todayConfig.circleViewUnavailableColor
+            self.circleView.layer.borderColor = todayConfig.circleViewUnavailableColor.cgColor
         } else if !viewConfig.isSelectedViewHidden {
             self.dateLabel.textColor = todayConfig.selectedLabelColor
-            self.circleView.backgroundColor = todayConfig.circleViewSelectedColor
+            self.circleView.layer.borderColor = todayConfig.circleViewSelectedColor.cgColor
         } else if !viewConfig.rangeView.isHidden {
             self.dateLabel.textColor = todayConfig.onRangeLabelColor
-            self.circleView.backgroundColor = todayConfig.onRangeLabelColor
+            self.circleView.layer.borderColor = todayConfig.onRangeLabelColor.cgColor
         } else {
             self.dateLabel.textColor = todayConfig.dateLabelColor
-            self.circleView.backgroundColor = todayConfig.circleViewColor
+            self.circleView.layer.borderColor = todayConfig.circleViewColor.cgColor
         }
 
         self.circleView.layer.cornerRadius = todayConfig.circleSize * 0.5
@@ -389,7 +392,7 @@ final class DayCell: JTACDayCell {
         self.contentView.addSubview(self.circleView)
         NSLayoutConstraint.activate([
             self.circleView.centerXAnchor.constraint(equalTo: self.dateLabel.centerXAnchor),
-            self.circleView.topAnchor.constraint(equalTo: self.dateLabel.bottomAnchor, constant: todayConfig.circleVerticalInset),
+            self.circleView.centerYAnchor.constraint(equalTo: self.dateLabel.centerYAnchor),
             self.circleView.widthAnchor.constraint(equalToConstant: todayConfig.circleSize),
             self.circleView.heightAnchor.constraint(equalToConstant: todayConfig.circleSize)
         ])
@@ -412,6 +415,8 @@ public extension FastisConfig {
          Default value — `.systemFont(ofSize: 17)`
          */
         public var dateLabelFont: UIFont = .systemFont(ofSize: 17)
+        
+        public var selectedDateLabelFont: UIFont = .systemFont(ofSize: 17)
 
         /**
          Color of date label in cell

@@ -308,13 +308,13 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     private func configureConstraints() {
         if !self.privateCloseOnSelectionImmediately {
             NSLayoutConstraint.activate([
-                self.weekView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
+                self.weekView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 12),
                 self.weekView.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 12),
                 self.weekView.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -12)
             ])
         } else {
             NSLayoutConstraint.activate([
-                self.weekView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
+                self.weekView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 12),
                 self.weekView.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 12),
                 self.weekView.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -12)
             ])
@@ -382,6 +382,10 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
                 newConfig.isToday = true
             }
 
+            newConfig.dateFont = newConfig.isSelectedViewHidden
+                ? self.config.dayCell.dateLabelFont
+                : self.config.dayCell.selectedDateLabelFont
+            
             self.viewConfigs[indexPath] = newConfig
             cell.applyConfig(self.config)
             cell.configure(for: newConfig)

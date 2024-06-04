@@ -65,7 +65,13 @@ final class WeekView: UIView {
 
     func makeWeekLabel(for symbol: String) -> UILabel {
         let label = UILabel()
-        label.text = self.config.uppercaseWeekName ? symbol.uppercased() : symbol
+        if self.config.uppercaseWeekName,
+           let first: Character = symbol.first,
+           let last: Character = symbol.last {
+            label.text = "\(first.uppercased())\(last.lowercased())"
+        } else {
+            label.text = symbol
+        }
         label.font = self.config.textFont
         label.textColor = self.config.textColor
         label.textAlignment = .center
