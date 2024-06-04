@@ -428,9 +428,9 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         } else if let range = value as? FastisRange {
             self.selectRange(range, in: calendar)
             selectHandler?(true)
+        } else {
+            selectHandler?(false)
         }
-        
-        selectHandler?(false)
     }
 
     private func handleDateTap(in calendar: JTACMonthView, date: Date) {
