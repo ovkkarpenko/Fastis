@@ -285,7 +285,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     }
     
     open func reset() {
-        self.value = nil
+        self.clear()
     }
 
     // MARK: - Configuration
