@@ -51,8 +51,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
 
     private lazy var cancelBarButtonItem: UIBarButtonItem = {
         if let customButton = self.appearance.customCancelButton {
-            customButton.target = self
-            customButton.action = #selector(self.cancel)
             return customButton
         }
 
@@ -107,19 +105,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         return view
     }()
 
-    private lazy var currentValueView: CurrentValueView<Value> = {
-        let view = CurrentValueView<Value>(
-            config: self.config.currentValueView,
-            calendar: self.config.calendar
-        )
-        view.currentValue = self.value
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.onClear = { [weak self] in
-            self?.clear()
-        }
-        return view
-    }()
-
     private lazy var shortcutContainerView: ShortcutContainerView<Value> = {
         let view = ShortcutContainerView<Value>(
             config: self.config.shortcutContainerView,
@@ -161,7 +146,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     private var value: Value? {
         didSet {
             self.updateSelectedShortcut()
-            self.currentValueView.currentValue = self.value
             self.doneBarButtonItem.isEnabled = self.allowToChooseNilDate || self.value != nil
         }
     }
@@ -314,9 +298,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: self.monthHeaderReuseIdentifier
         )
-        if !self.privateCloseOnSelectionImmediately {
-            self.view.addSubview(self.currentValueView)
-        }
         self.view.addSubview(self.weekView)
         self.view.addSubview(self.calendarView)
         if !self.shortcuts.isEmpty {
@@ -327,12 +308,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     private func configureConstraints() {
         if !self.privateCloseOnSelectionImmediately {
             NSLayoutConstraint.activate([
-                self.currentValueView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
-                self.currentValueView.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 12),
-                self.currentValueView.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -12)
-            ])
-            NSLayoutConstraint.activate([
-                self.weekView.topAnchor.constraint(equalTo: self.currentValueView.bottomAnchor),
+                self.weekView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
                 self.weekView.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 12),
                 self.weekView.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -12)
             ])
@@ -433,7 +409,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     @objc
     private func done() {
         self.isDone = true
-        self.dismiss(animated: true)
     }
 
     private func selectValue(_ value: Value?, in calendar: JTACMonthView) {
