@@ -188,6 +188,8 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
      Default value — `"nil"`
      */
     public var dismissHandler: ((DismissAction) -> Void)?
+    
+    open var selectHandler: ((Bool) -> Void)?
 
     /**
      And initial value which will be selected by default
@@ -282,7 +284,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         viewController.present(navVc, animated: flag, completion: completion)
     }
     
-    public func reset() {
+    open func reset() {
         self.value = nil
     }
 
@@ -422,9 +424,13 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     private func selectValue(_ value: Value?, in calendar: JTACMonthView) {
         if let date = value as? Date {
             calendar.selectDates([date])
+            selectHandler?(true)
         } else if let range = value as? FastisRange {
             self.selectRange(range, in: calendar)
+            selectHandler?(true)
         }
+        
+        selectHandler?(false)
     }
 
     private func handleDateTap(in calendar: JTACMonthView, date: Date) {
