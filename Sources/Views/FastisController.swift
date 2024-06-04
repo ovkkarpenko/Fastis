@@ -281,6 +281,10 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
 
         viewController.present(navVc, animated: flag, completion: completion)
     }
+    
+    public func reset() {
+        self.value = nil
+    }
 
     // MARK: - Configuration
 
