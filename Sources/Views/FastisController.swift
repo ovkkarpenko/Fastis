@@ -47,41 +47,26 @@ import UIKit
  */
 open class FastisController<Value: FastisValue>: UIViewController, JTACMonthViewDelegate, JTACMonthViewDataSource {
 
+    open override var modalTransitionStyle: UIModalTransitionStyle {
+        get {
+            .coverVertical
+        }
+
+        set {}
+    }
+
+    open override var modalPresentationStyle: UIModalPresentationStyle {
+        get {
+            .overCurrentContext
+        }
+
+        set {}
+    }
+    
     // MARK: - Outlets
 
-    private lazy var cancelBarButtonItem: UIBarButtonItem = {
-        if let customButton = self.appearance.customCancelButton {
-            return customButton
-        }
-
-        let barButtonItem = UIBarButtonItem(
-            title: self.appearance.cancelButtonTitle,
-            style: .plain,
-            target: self,
-            action: #selector(self.cancel)
-        )
-        barButtonItem.tintColor = self.appearance.barButtonItemsColor
-        return barButtonItem
-    }()
-
-    private lazy var doneBarButtonItem: UIBarButtonItem = {
-        if let customButton = self.appearance.customDoneButton {
-            customButton.target = self
-            customButton.action = #selector(self.done)
-            return customButton
-        }
-
-        let barButtonItem = UIBarButtonItem(
-            title: self.appearance.doneButtonTitle,
-            style: .done,
-            target: self,
-            action: #selector(self.done)
-        )
-        barButtonItem.tintColor = self.appearance.barButtonItemsColor
-        barButtonItem.isEnabled = self.allowToChooseNilDate
-        return barButtonItem
-    }()
-
+    
+    
     private lazy var calendarView: JTACMonthView = {
         let monthView = JTACMonthView()
         monthView.translatesAutoresizingMaskIntoConstraints = false
@@ -99,8 +84,38 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         return monthView
     }()
 
-    private lazy var weekView: WeekView = {
-        let view = WeekView(calendar: self.config.calendar, config: self.config.weekView)
+    private lazy var containerView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private lazy var resetButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Скинути", for: .normal)
+        button.isEnabled = false
+        button.addTarget(self, action: #selector(clear), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    private lazy var doneButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Готово", for: .normal)
+        button.isEnabled = false
+        button.addTarget(self, action: #selector(done), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    private lazy var headerView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private lazy var lineView: UIView = {
+        let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -127,6 +142,8 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         }
         return view
     }()
+    
+    private let panGestureRecognizer: UIPanGestureRecognizer = UIPanGestureRecognizer()
 
     // MARK: - Variables
 
@@ -146,7 +163,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     private var value: Value? {
         didSet {
             self.updateSelectedShortcut()
-            self.doneBarButtonItem.isEnabled = self.allowToChooseNilDate || self.value != nil
+            self.doneButton.isEnabled = self.allowToChooseNilDate || self.value != nil
         }
     }
 
@@ -283,18 +300,46 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
 
         viewController.present(navVc, animated: flag, completion: completion)
     }
-    
-    open func reset() {
-        self.clear()
-    }
 
+    open override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
+
+        if touches.first?.view == view {
+            cancel()
+        }
+    }
+    
     // MARK: - Configuration
 
     private func configureUI() {
-        self.view.backgroundColor = self.appearance.backgroundColor
+        self.view.backgroundColor = .clear
         self.navigationItem.largeTitleDisplayMode = .never
-        self.navigationItem.leftBarButtonItem = self.cancelBarButtonItem
-        self.navigationItem.rightBarButtonItem = self.doneBarButtonItem
+        
+        self.panGestureRecognizer.addTarget(self, action: #selector(handlePanGesture(_:)))
+        
+        self.containerView.backgroundColor = self.appearance.backgroundColor
+        self.containerView.layer.cornerRadius = 12
+        self.containerView.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
+        self.containerView.addGestureRecognizer(panGestureRecognizer)
+        
+        self.headerView.backgroundColor = self.appearance.backgroundColor
+        self.headerView.layer.cornerRadius = 12
+        self.headerView.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
+
+        self.resetButton.titleLabel?.font = config.dayCell.dateLabelFont
+        self.doneButton.titleLabel?.font = config.dayCell.dateLabelFont
+        
+        self.resetButton.setTitleColor(config.dayCell.selectedBackgroundColor, for: .normal)
+        self.doneButton.setTitleColor(config.dayCell.selectedBackgroundColor, for: .normal)
+        
+        self.resetButton.setTitleColor(config.dayCell.selectedBackgroundColor.withAlphaComponent(0.7), for: .highlighted)
+        self.doneButton.setTitleColor(config.dayCell.selectedBackgroundColor.withAlphaComponent(0.7), for: .highlighted)
+        
+        self.resetButton.setTitleColor(config.dayCell.dateLabelUnavailableColor, for: .disabled)
+        self.doneButton.setTitleColor(config.dayCell.dateLabelUnavailableColor, for: .disabled)
+        
+        self.lineView.backgroundColor = config.dayCell.onRangeBackgroundColor
+        self.lineView.layer.cornerRadius = 2.5
     }
 
     private func configureSubviews() {
@@ -304,38 +349,62 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: self.monthHeaderReuseIdentifier
         )
-        self.view.addSubview(self.weekView)
-        self.view.addSubview(self.calendarView)
+        self.view.addSubview(self.containerView)
+        self.containerView.addSubview(self.headerView)
+        self.headerView.addSubview(self.lineView)
+        self.containerView.addSubview(resetButton)
+        self.containerView.addSubview(doneButton)
+        self.containerView.addSubview(self.calendarView)
         if !self.shortcuts.isEmpty {
-            self.view.addSubview(self.shortcutContainerView)
+            self.containerView.addSubview(self.shortcutContainerView)
         }
     }
 
     private func configureConstraints() {
-        if !self.privateCloseOnSelectionImmediately {
-            NSLayoutConstraint.activate([
-                self.weekView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 12),
-                self.weekView.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 12),
-                self.weekView.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -12)
-            ])
-        } else {
-            NSLayoutConstraint.activate([
-                self.weekView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 12),
-                self.weekView.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 12),
-                self.weekView.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -12)
-            ])
-        }
+        NSLayoutConstraint.activate([
+            self.containerView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 48),
+            self.containerView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+            self.containerView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+            self.containerView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+        ])
+        
+        NSLayoutConstraint.activate([
+            self.headerView.topAnchor.constraint(equalTo: self.containerView.topAnchor),
+            self.headerView.leftAnchor.constraint(equalTo: self.containerView.leftAnchor),
+            self.headerView.rightAnchor.constraint(equalTo: self.containerView.rightAnchor)
+        ])
+        
+        NSLayoutConstraint.activate([
+            self.lineView.topAnchor.constraint(equalTo: self.headerView.topAnchor, constant: 8),
+            self.lineView.topAnchor.constraint(equalTo: self.headerView.bottomAnchor, constant: -16),
+            self.lineView.centerXAnchor.constraint(equalTo: self.containerView.centerXAnchor),
+            self.lineView.heightAnchor.constraint(equalToConstant: 5),
+            self.lineView.widthAnchor.constraint(equalToConstant: 36)
+        ])
+        
+        NSLayoutConstraint.activate([
+            self.resetButton.topAnchor.constraint(equalTo: self.headerView.bottomAnchor),
+            self.resetButton.leftAnchor.constraint(equalTo: self.containerView.leftAnchor, constant: 16),
+            self.resetButton.heightAnchor.constraint(equalToConstant: 24)
+        ])
+        
+        NSLayoutConstraint.activate([
+            self.doneButton.topAnchor.constraint(equalTo: self.headerView.bottomAnchor),
+            self.doneButton.rightAnchor.constraint(equalTo: self.containerView.rightAnchor, constant: -16),
+            self.doneButton.heightAnchor.constraint(equalToConstant: 24)
+        ])
+
         if !self.shortcuts.isEmpty {
             NSLayoutConstraint.activate([
-                self.shortcutContainerView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-                self.shortcutContainerView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-                self.shortcutContainerView.rightAnchor.constraint(equalTo: self.view.rightAnchor)
+                self.shortcutContainerView.bottomAnchor.constraint(equalTo: self.containerView.bottomAnchor),
+                self.shortcutContainerView.leftAnchor.constraint(equalTo: self.containerView.leftAnchor),
+                self.shortcutContainerView.rightAnchor.constraint(equalTo: self.containerView.rightAnchor)
             ])
         }
         NSLayoutConstraint.activate([
-            self.calendarView.topAnchor.constraint(equalTo: self.weekView.bottomAnchor),
-            self.calendarView.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 16),
-            self.calendarView.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -16)
+            self.calendarView.topAnchor.constraint(equalTo: self.resetButton.bottomAnchor, constant: 14),
+            self.calendarView.leftAnchor.constraint(equalTo: self.containerView.leftAnchor, constant: 16),
+            self.calendarView.rightAnchor.constraint(equalTo: self.containerView.rightAnchor, constant: -16)
         ])
         if !self.shortcuts.isEmpty {
             NSLayoutConstraint.activate([
@@ -343,7 +412,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             ])
         } else {
             NSLayoutConstraint.activate([
-                self.calendarView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+                self.calendarView.bottomAnchor.constraint(equalTo: self.containerView.bottomAnchor)
             ])
         }
     }
@@ -421,16 +490,50 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         self.isDone = true
         self.dismiss(animated: true)
     }
+    
+    @objc
+    private func handlePanGesture(_ gestureRecognizer: UIPanGestureRecognizer) {
+        let translation = gestureRecognizer.translation(in: view)
+
+        switch gestureRecognizer.state {
+        case .began:
+            containerView.transform = .identity
+
+        case .changed:
+            guard translation.y > 0 else { return }
+
+            containerView.transform = CGAffineTransform(translationX: 0, y: translation.y)
+
+        case .ended:
+            if translation.y > 100 {
+                cancel()
+            } else {
+                showBottomSheet()
+            }
+
+        default:
+            break
+        }
+    }
+
+    private func showBottomSheet() {
+        UIView.animate(withDuration: 0.3) {
+            self.containerView.transform = .identity
+        }
+    }
 
     private func selectValue(_ value: Value?, in calendar: JTACMonthView) {
         if let date = value as? Date {
             calendar.selectDates([date])
-            selectHandler?(true)
+            resetButton.isEnabled = true
+            doneButton.isEnabled = true
         } else if let range = value as? FastisRange {
             self.selectRange(range, in: calendar)
-            selectHandler?(true)
+            resetButton.isEnabled = true
+            doneButton.isEnabled = true
         } else {
-            selectHandler?(false)
+            resetButton.isEnabled = false
+            doneButton.isEnabled = false
         }
     }
 
@@ -510,7 +613,11 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         }
     }
 
+    @objc
     private func clear() {
+        self.resetButton.isEnabled = false
+        self.doneButton.isEnabled = false
+        
         self.value = nil
         self.viewConfigs.removeAll()
         self.calendarView.deselectAllDates()
@@ -525,14 +632,14 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         var endDate = self.config.calendar.date(byAdding: .year, value: 99, to: Date())!
 
         if let maximumDate = self.privateMaximumDate,
-           let endOfNextMonth = self.config.calendar.date(byAdding: .month, value: 2, to: maximumDate)?
+           let endOfNextMonth = self.config.calendar.date(byAdding: .weekday, value: 2, to: maximumDate)?
            .endOfMonth(in: self.config.calendar)
         {
             endDate = endOfNextMonth
         }
 
         if let minimumDate = self.privateMinimumDate,
-           let startOfPreviousMonth = self.config.calendar.date(byAdding: .month, value: -2, to: minimumDate)?
+           let startOfPreviousMonth = self.config.calendar.date(byAdding: .weekday, value: -2, to: minimumDate)?
            .startOfMonth(in: self.config.calendar)
         {
             startDate = startOfPreviousMonth
@@ -559,8 +666,10 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             withReuseIdentifier: self.monthHeaderReuseIdentifier,
             for: indexPath
         ) as! MonthHeader
-        header.applyConfig(self.config.monthHeader, calendar: self.config.calendar)
+        
+        header.applyConfig(self.config.monthHeader, self.config.weekView, calendar: self.config.calendar)
         header.configure(for: range.start)
+        
         if self.privateSelectMonthOnHeaderTap, Value.mode == .range {
             header.tapHandler = { [weak self, weak calendar] in
                 guard let self, let calendar else { return }

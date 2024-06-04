@@ -13,6 +13,12 @@ final class MonthHeader: JTACMonthReusableView {
 
     // MARK: - Outlets
 
+    private lazy var weekView: WeekView = {
+        let view = WeekView(calendar: .current, config: FastisConfig.default.weekView)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private lazy var monthLabel: UILabel = {
         let label = UILabel()
         label.text = "Month name"
@@ -22,11 +28,8 @@ final class MonthHeader: JTACMonthReusableView {
 
     // MARK: - Variables
 
-    private var leftAnchorConstraint: NSLayoutConstraint?
-    private var rightAnchorConstraint: NSLayoutConstraint?
-    private var topAnchorConstraint: NSLayoutConstraint?
-    private var bottomAnchorConstraint: NSLayoutConstraint?
-
+    private var config: FastisConfig?
+    
     internal var tapHandler: (() -> Void)?
     private lazy var monthFormatter = DateFormatter()
 
@@ -36,7 +39,7 @@ final class MonthHeader: JTACMonthReusableView {
         super.init(frame: frame)
         self.configureSubviews()
         self.configureConstraints()
-        self.applyConfig(FastisConfig.default.monthHeader, calendar: .current)
+        self.applyConfig(FastisConfig.default.monthHeader, FastisConfig.default.weekView, calendar: .current)
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.viewTapped))
         self.addGestureRecognizer(tapRecognizer)
     }
@@ -49,17 +52,23 @@ final class MonthHeader: JTACMonthReusableView {
     // MARK: - Configuration
 
     private func configureSubviews() {
+        self.addSubview(self.weekView)
         self.addSubview(self.monthLabel)
     }
 
     private func configureConstraints() {
-        self.leftAnchorConstraint = self.monthLabel.leftAnchor.constraint(equalTo: self.leftAnchor)
-        self.rightAnchorConstraint = self.monthLabel.rightAnchor.constraint(equalTo: self.rightAnchor)
-        self.topAnchorConstraint = self.monthLabel.topAnchor.constraint(equalTo: self.topAnchor)
-        self.bottomAnchorConstraint = self.monthLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor)
         NSLayoutConstraint.activate([
-            self.leftAnchorConstraint, self.rightAnchorConstraint, self.topAnchorConstraint, self.bottomAnchorConstraint
+            self.monthLabel.leftAnchor.constraint(equalTo: self.leftAnchor),
+            self.monthLabel.rightAnchor.constraint(equalTo: self.rightAnchor),
+            self.monthLabel.topAnchor.constraint(equalTo: self.topAnchor, constant: 6)
         ].compactMap({ $0 }))
+        
+        NSLayoutConstraint.activate([
+            self.weekView.topAnchor.constraint(equalTo: self.monthLabel.bottomAnchor, constant: 16),
+            self.weekView.leftAnchor.constraint(equalTo: self.leftAnchor),
+            self.weekView.rightAnchor.constraint(equalTo: self.rightAnchor),
+            self.weekView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
+        ])
     }
 
     internal func configure(for date: Date) {
@@ -68,7 +77,9 @@ final class MonthHeader: JTACMonthReusableView {
 
     // MARK: - Actions
 
-    internal func applyConfig(_ config: FastisConfig.MonthHeader, calendar: Calendar) {
+    internal func applyConfig(_ config: FastisConfig.MonthHeader, _ weekConfig: FastisConfig.WeekView, calendar: Calendar) {
+        self.weekView.configure(calendar: calendar, config: weekConfig)
+        
         self.monthFormatter.calendar = calendar
         self.monthFormatter.dateFormat = config.monthFormat
         self.monthFormatter.locale = calendar.locale
@@ -76,10 +87,6 @@ final class MonthHeader: JTACMonthReusableView {
         self.monthLabel.font = config.labelFont
         self.monthLabel.textColor = config.labelColor
         self.monthLabel.textAlignment = config.labelAlignment
-        self.leftAnchorConstraint?.constant = config.insets.left
-        self.rightAnchorConstraint?.constant = -config.insets.right
-        self.topAnchorConstraint?.constant = config.insets.top
-        self.bottomAnchorConstraint?.constant = -config.insets.bottom
     }
 
     @objc
@@ -138,7 +145,7 @@ public extension FastisConfig {
 
          Default value — `48pt`
          */
-        public var height = MonthSize(defaultSize: 48)
+        public var height = MonthSize(defaultSize: 70)
     }
 
 }

@@ -25,8 +25,8 @@ final class WeekView: UIView {
 
     // MARK: - Variables
 
-    private let config: FastisConfig.WeekView
-    private let calendar: Calendar
+    private var config: FastisConfig.WeekView
+    private var calendar: Calendar
 
     // MARK: - Lifecycle
 
@@ -44,6 +44,15 @@ final class WeekView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    func configure(calendar: Calendar, config: FastisConfig.WeekView) {
+        self.config = config
+        self.calendar = calendar
+        
+        self.configureUI()
+        self.configureSubviews()
+        self.configureConstraints()
+    }
+    
     // MARK: - Configuration
 
     private func configureUI() {
@@ -53,6 +62,9 @@ final class WeekView: UIView {
     }
 
     private func configureSubviews() {
+        stackView.removeFromSuperview()
+        stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
         let numDays = self.calendar.shortStandaloneWeekdaySymbols.count
         let first = self.calendar.firstWeekday - 1
         let end = first + numDays - 1
