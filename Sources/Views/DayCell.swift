@@ -465,7 +465,7 @@ public extension FastisConfig {
 
          Default value — `.label`
          */
-        public var onRangeLabelColor: UIColor = .label
+        public var onRangeLabelColor: UIColor = .black
 
         /**
          Inset of cell's background view when date is a part of selected range
