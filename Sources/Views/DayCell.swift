@@ -423,7 +423,7 @@ public extension FastisConfig {
 
          Default value — `.label`
          */
-        public var dateLabelColor: UIColor = .label
+        public var dateLabelColor: UIColor = .black
 
         /**
          Color of date label in cell when date is unavailable for select
