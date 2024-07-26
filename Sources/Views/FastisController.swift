@@ -102,7 +102,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     private lazy var doneButton: UIButton = {
         let button = UIButton()
         button.setTitle("Готово", for: .normal)
-        button.isEnabled = false
         button.addTarget(self, action: #selector(done), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -163,7 +162,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     private var value: Value? {
         didSet {
             self.updateSelectedShortcut()
-            self.doneButton.isEnabled = self.allowToChooseNilDate || self.value != nil
+            self.resetButton.isEnabled = self.value != nil
         }
     }
 
@@ -526,14 +525,11 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         if let date = value as? Date {
             calendar.selectDates([date])
             resetButton.isEnabled = true
-            doneButton.isEnabled = true
         } else if let range = value as? FastisRange {
             self.selectRange(range, in: calendar)
             resetButton.isEnabled = true
-            doneButton.isEnabled = true
         } else {
             resetButton.isEnabled = false
-            doneButton.isEnabled = false
         }
     }
 
@@ -616,7 +612,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     @objc
     private func clear() {
         self.resetButton.isEnabled = false
-        self.doneButton.isEnabled = false
         
         self.value = nil
         self.viewConfigs.removeAll()
