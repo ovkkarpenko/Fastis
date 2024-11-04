@@ -76,7 +76,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         monthView.minimumLineSpacing = 2
         monthView.minimumInteritemSpacing = 0
         monthView.showsVerticalScrollIndicator = false
-        monthView.cellSize = 46
+        monthView.cellSize = 44
         monthView.allowsMultipleSelection = Value.mode == .range
         monthView.allowsRangedSelection = true
         monthView.rangeSelectionMode = .continuous
@@ -92,7 +92,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     
     private lazy var resetButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Скинути", for: .normal)
+        button.setTitle(config.controller.cancelButtonTitle, for: .normal)
         button.isEnabled = false
         button.addTarget(self, action: #selector(clear), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -101,8 +101,16 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     
     private lazy var doneButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Готово", for: .normal)
+        button.setTitle(config.controller.doneButtonTitle, for: .normal)
         button.addTarget(self, action: #selector(done), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    private lazy var bottomDoneButton: UIButton = {
+        let button = UIButton()
+        button.setTitle(config.controller.bottomDoneButtonTitle, for: .normal)
+        button.addTarget(self, action: #selector(bottomDone), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -112,11 +120,14 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
-    
-    private lazy var lineView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+
+    private lazy var chevronCompactDownImage: UIImageView = {
+        let imageView = UIImageView()
+        imageView.tintColor = config.controller.chevronCompactDownColor
+        imageView.image = config.controller.chevronCompactDownImage?.withRenderingMode(.alwaysTemplate)
+        imageView.contentMode = .scaleAspectFill
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
     }()
 
     private lazy var shortcutContainerView: ShortcutContainerView<Value> = {
@@ -327,18 +338,22 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
 
         self.resetButton.titleLabel?.font = config.dayCell.dateLabelFont
         self.doneButton.titleLabel?.font = config.dayCell.dateLabelFont
+        self.bottomDoneButton.titleLabel?.font = config.monthHeader.labelFont
         
         self.resetButton.setTitleColor(config.dayCell.selectedBackgroundColor, for: .normal)
         self.doneButton.setTitleColor(config.dayCell.selectedBackgroundColor, for: .normal)
+        self.bottomDoneButton.setTitleColor(config.controller.bottomDoneButtonTextColor, for: .normal)
         
         self.resetButton.setTitleColor(config.dayCell.selectedBackgroundColor.withAlphaComponent(0.7), for: .highlighted)
         self.doneButton.setTitleColor(config.dayCell.selectedBackgroundColor.withAlphaComponent(0.7), for: .highlighted)
         
         self.resetButton.setTitleColor(config.dayCell.dateLabelUnavailableColor, for: .disabled)
         self.doneButton.setTitleColor(config.dayCell.dateLabelUnavailableColor, for: .disabled)
+        self.bottomDoneButton.setTitleColor(config.controller.bottomDoneButtonTextColor, for: .disabled)
         
-        self.lineView.backgroundColor = config.dayCell.onRangeBackgroundColor
-        self.lineView.layer.cornerRadius = 2.5
+        self.bottomDoneButton.layer.cornerRadius = 12
+        self.bottomDoneButton.backgroundColor = config.controller.bottomDoneButtonBackground
+        self.bottomDoneButton.setTitleColor(config.dayCell.dateLabelUnavailableColor, for: .disabled)
     }
 
     private func configureSubviews() {
@@ -350,9 +365,15 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         )
         self.view.addSubview(self.containerView)
         self.containerView.addSubview(self.headerView)
-        self.headerView.addSubview(self.lineView)
-        self.containerView.addSubview(resetButton)
-        self.containerView.addSubview(doneButton)
+        self.headerView.addSubview(self.chevronCompactDownImage)
+        
+        if config.controller.bottomDoneButtonTitle == nil {
+            self.containerView.addSubview(resetButton)
+            self.containerView.addSubview(doneButton)
+        } else {
+            self.containerView.addSubview(bottomDoneButton)
+        }
+        
         self.containerView.addSubview(self.calendarView)
         if !self.shortcuts.isEmpty {
             self.containerView.addSubview(self.shortcutContainerView)
@@ -360,12 +381,20 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     }
 
     private func configureConstraints() {
-        NSLayoutConstraint.activate([
-            self.containerView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 48),
-            self.containerView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-            self.containerView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            self.containerView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
-        ])
+        if config.controller.onlyCurrentMonth {
+            NSLayoutConstraint.activate([
+                self.containerView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+                self.containerView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+                self.containerView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+            ])
+        } else {
+            NSLayoutConstraint.activate([
+                self.containerView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 48),
+                self.containerView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+                self.containerView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+                self.containerView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+            ])
+        }
         
         NSLayoutConstraint.activate([
             self.headerView.topAnchor.constraint(equalTo: self.containerView.topAnchor),
@@ -374,24 +403,51 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         ])
         
         NSLayoutConstraint.activate([
-            self.lineView.topAnchor.constraint(equalTo: self.headerView.topAnchor, constant: 8),
-            self.lineView.topAnchor.constraint(equalTo: self.headerView.bottomAnchor, constant: -16),
-            self.lineView.centerXAnchor.constraint(equalTo: self.containerView.centerXAnchor),
-            self.lineView.heightAnchor.constraint(equalToConstant: 5),
-            self.lineView.widthAnchor.constraint(equalToConstant: 36)
+            self.chevronCompactDownImage.topAnchor.constraint(equalTo: self.headerView.topAnchor, constant: 12),
+            self.chevronCompactDownImage.bottomAnchor.constraint(equalTo: self.headerView.bottomAnchor, constant: -4),
+            self.chevronCompactDownImage.centerXAnchor.constraint(equalTo: self.containerView.centerXAnchor),
+            self.chevronCompactDownImage.heightAnchor.constraint(equalToConstant: 10),
+            self.chevronCompactDownImage.widthAnchor.constraint(equalToConstant: 36)
         ])
         
-        NSLayoutConstraint.activate([
-            self.resetButton.topAnchor.constraint(equalTo: self.headerView.bottomAnchor),
-            self.resetButton.leftAnchor.constraint(equalTo: self.containerView.leftAnchor, constant: 16),
-            self.resetButton.heightAnchor.constraint(equalToConstant: 24)
-        ])
-        
-        NSLayoutConstraint.activate([
-            self.doneButton.topAnchor.constraint(equalTo: self.headerView.bottomAnchor),
-            self.doneButton.rightAnchor.constraint(equalTo: self.containerView.rightAnchor, constant: -16),
-            self.doneButton.heightAnchor.constraint(equalToConstant: 24)
-        ])
+        if config.controller.bottomDoneButtonTitle == nil {
+            NSLayoutConstraint.activate([
+                self.resetButton.topAnchor.constraint(equalTo: self.headerView.bottomAnchor),
+                self.resetButton.leftAnchor.constraint(equalTo: self.containerView.leftAnchor, constant: 16),
+                self.resetButton.heightAnchor.constraint(equalToConstant: 24)
+            ])
+            
+            NSLayoutConstraint.activate([
+                self.doneButton.topAnchor.constraint(equalTo: self.headerView.bottomAnchor),
+                self.doneButton.rightAnchor.constraint(equalTo: self.containerView.rightAnchor, constant: -16),
+                self.doneButton.heightAnchor.constraint(equalToConstant: 24)
+            ])
+            
+            NSLayoutConstraint.activate([
+                self.calendarView.topAnchor.constraint(equalTo: self.resetButton.bottomAnchor, constant: 14),
+                self.calendarView.leftAnchor.constraint(equalTo: self.containerView.leftAnchor, constant: 16),
+                self.calendarView.rightAnchor.constraint(equalTo: self.containerView.rightAnchor, constant: -16)
+            ])
+        } else {
+            NSLayoutConstraint.activate([
+                self.calendarView.topAnchor.constraint(equalTo: self.headerView.bottomAnchor),
+                self.calendarView.leftAnchor.constraint(equalTo: self.containerView.leftAnchor, constant: 16),
+                self.calendarView.rightAnchor.constraint(equalTo: self.containerView.rightAnchor, constant: -16)
+            ])
+            
+            if config.controller.onlyCurrentMonth {
+                NSLayoutConstraint.activate([
+                    self.calendarView.heightAnchor.constraint(equalToConstant: 290)
+                ])
+            }
+            
+            NSLayoutConstraint.activate([
+                self.bottomDoneButton.topAnchor.constraint(equalTo: self.calendarView.bottomAnchor, constant: 16),
+                self.bottomDoneButton.leftAnchor.constraint(equalTo: self.containerView.leftAnchor, constant: 16),
+                self.bottomDoneButton.rightAnchor.constraint(equalTo: self.containerView.rightAnchor, constant: -16),
+                self.bottomDoneButton.heightAnchor.constraint(equalToConstant: 52)
+            ])
+        }
 
         if !self.shortcuts.isEmpty {
             NSLayoutConstraint.activate([
@@ -400,19 +456,20 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
                 self.shortcutContainerView.rightAnchor.constraint(equalTo: self.containerView.rightAnchor)
             ])
         }
-        NSLayoutConstraint.activate([
-            self.calendarView.topAnchor.constraint(equalTo: self.resetButton.bottomAnchor, constant: 14),
-            self.calendarView.leftAnchor.constraint(equalTo: self.containerView.leftAnchor, constant: 16),
-            self.calendarView.rightAnchor.constraint(equalTo: self.containerView.rightAnchor, constant: -16)
-        ])
         if !self.shortcuts.isEmpty {
             NSLayoutConstraint.activate([
                 self.calendarView.bottomAnchor.constraint(equalTo: self.shortcutContainerView.topAnchor)
             ])
         } else {
-            NSLayoutConstraint.activate([
-                self.calendarView.bottomAnchor.constraint(equalTo: self.containerView.bottomAnchor)
-            ])
+            if config.controller.bottomDoneButtonTitle == nil {
+                NSLayoutConstraint.activate([
+                    self.calendarView.bottomAnchor.constraint(equalTo: self.containerView.bottomAnchor)
+                ])
+            } else {
+                NSLayoutConstraint.activate([
+                    self.bottomDoneButton.bottomAnchor.constraint(equalTo: self.containerView.bottomAnchor, constant: -16)
+                ])
+            }
         }
     }
 
@@ -486,6 +543,12 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
 
     @objc
     private func done() {
+        self.isDone = true
+        self.dismiss(animated: true)
+    }
+    
+    @objc
+    private func bottomDone() {
         self.isDone = true
         self.dismiss(animated: true)
     }
@@ -625,19 +688,25 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
 
         var startDate = self.config.calendar.date(byAdding: .year, value: -99, to: Date())!
         var endDate = self.config.calendar.date(byAdding: .year, value: 99, to: Date())!
-
+        
         if let maximumDate = self.privateMaximumDate,
            let endOfNextMonth = self.config.calendar.date(byAdding: .weekday, value: 2, to: maximumDate)?
-           .endOfMonth(in: self.config.calendar)
-        {
-            endDate = endOfNextMonth
+            .endOfMonth(in: self.config.calendar) {
+            if self.config.controller.onlyCurrentMonth {
+                endDate = maximumDate
+            } else {
+                endDate = endOfNextMonth
+            }
         }
 
         if let minimumDate = self.privateMinimumDate,
            let startOfPreviousMonth = self.config.calendar.date(byAdding: .weekday, value: -2, to: minimumDate)?
-           .startOfMonth(in: self.config.calendar)
-        {
-            startDate = startOfPreviousMonth
+            .startOfMonth(in: self.config.calendar) {
+            if self.config.controller.onlyCurrentMonth {
+                startDate = minimumDate
+            } else {
+                startDate = startOfPreviousMonth
+            }
         }
 
         return ConfigurationParameters(
@@ -844,14 +913,18 @@ public extension FastisConfig {
 
          Default value — `"Cancel"`
          */
-        public var cancelButtonTitle = "Cancel"
+        public var cancelButtonTitle: String? = "Скинути"
 
         /**
          Done button title
 
          Default value — `"Done"`
          */
-        public var doneButtonTitle = "Done"
+        public var doneButtonTitle: String? = "Готово"
+        
+        public var bottomDoneButtonTitle: String?
+        public var bottomDoneButtonTextColor: UIColor = .white
+        public var bottomDoneButtonBackground: UIColor = .green
 
         /**
          Controller's background color
@@ -866,6 +939,10 @@ public extension FastisConfig {
          Default value — `.systemBlue`
          */
         public var barButtonItemsColor: UIColor = .systemBlue
+        
+        public var chevronCompactDownColor: UIColor = .gray
+        
+        public var chevronCompactDownImage: UIImage?
 
         /**
          Custom cancel button in navigation bar
@@ -880,7 +957,8 @@ public extension FastisConfig {
          Default value — `nil`
          */
         public var customDoneButton: UIBarButtonItem?
-
+        
+        public var onlyCurrentMonth: Bool = false
     }
 }
 

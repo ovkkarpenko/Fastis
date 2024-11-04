@@ -80,7 +80,7 @@ final class WeekView: UIView {
         if self.config.uppercaseWeekName,
            let first: Character = symbol.first,
            let last: Character = symbol.last {
-            label.text = "\(first.uppercased())\(last.lowercased())"
+            label.text = "\(first.uppercased())\(last.uppercased())"
         } else {
             label.text = symbol
         }
@@ -92,8 +92,8 @@ final class WeekView: UIView {
 
     private func configureConstraints() {
         NSLayoutConstraint.activate([
-            self.stackView.leftAnchor.constraint(equalTo: self.leftAnchor, constant: 4),
-            self.stackView.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -4),
+            self.stackView.leftAnchor.constraint(equalTo: self.leftAnchor),
+            self.stackView.rightAnchor.constraint(equalTo: self.rightAnchor),
             self.stackView.topAnchor.constraint(equalTo: self.topAnchor),
             self.stackView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
         ])

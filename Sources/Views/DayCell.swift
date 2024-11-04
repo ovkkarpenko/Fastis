@@ -34,6 +34,13 @@ final class DayCell: JTACDayCell {
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
+    
+    lazy var selectionBackground2View: UIView = {
+        let view = UIView()
+        view.isHidden = true
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
 
     lazy var backgroundRangeView: UIView = {
         let view = UIView()
@@ -78,6 +85,8 @@ final class DayCell: JTACDayCell {
     func applyConfig(_ config: FastisConfig) {
         self.backgroundColor = config.controller.backgroundColor
 
+        self.selectionBackground2View.backgroundColor = config.todayCell?.background ?? .white
+        
         let todayConfig = config.todayCell
         let config = config.dayCell
 
@@ -90,6 +99,7 @@ final class DayCell: JTACDayCell {
         self.dateLabel.textColor = config.dateLabelColor
         if let cornerRadius = config.customSelectionViewCornerRadius {
             self.selectionBackgroundView.layer.cornerRadius = cornerRadius
+            self.selectionBackground2View.layer.cornerRadius = cornerRadius
         }
         self.rangeViewTopAnchorConstraints.forEach({ $0.constant = config.rangedBackgroundViewVerticalInset })
         self.rangeViewBottomAnchorConstraints.forEach({ $0.constant = -config.rangedBackgroundViewVerticalInset })
@@ -97,9 +107,9 @@ final class DayCell: JTACDayCell {
 
     public func configureSubviews() {
         self.contentView.addSubview(self.backgroundRangeView)
+        self.contentView.addSubview(self.selectionBackground2View)
         self.contentView.addSubview(self.selectionBackgroundView)
         self.contentView.addSubview(self.dateLabel)
-        self.selectionBackgroundView.layer.cornerRadius = min(self.frame.width, self.frame.height) / 2
     }
 
     public func configureConstraints() {
@@ -132,13 +142,29 @@ final class DayCell: JTACDayCell {
                 return constraint
             }(),
             self.selectionBackgroundView.leftAnchor.constraint(greaterThanOrEqualTo: self.contentView.leftAnchor, constant: 1),
-            self.selectionBackgroundView.topAnchor.constraint(greaterThanOrEqualTo: self.contentView.topAnchor, constant: 1),
+            self.selectionBackgroundView.topAnchor.constraint(greaterThanOrEqualTo: self.contentView.topAnchor, constant: config.customSelectionViewSpacing),
             self.selectionBackgroundView.rightAnchor.constraint(lessThanOrEqualTo: self.contentView.rightAnchor, constant: -1),
-            self.selectionBackgroundView.bottomAnchor.constraint(lessThanOrEqualTo: self.contentView.bottomAnchor, constant: -1),
+            self.selectionBackgroundView.bottomAnchor.constraint(lessThanOrEqualTo: self.contentView.bottomAnchor, constant: -config.customSelectionViewSpacing),
             self.selectionBackgroundView.centerXAnchor.constraint(equalTo: self.contentView.centerXAnchor),
             self.selectionBackgroundView.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
             self.selectionBackgroundView.widthAnchor.constraint(equalTo: self.selectionBackgroundView.heightAnchor)
         ])
+        
+        NSLayoutConstraint.activate([
+            {
+                let constraint = self.selectionBackgroundView.heightAnchor.constraint(equalToConstant: 100)
+                constraint.priority = .defaultLow
+                return constraint
+            }(),
+            self.selectionBackground2View.leftAnchor.constraint(greaterThanOrEqualTo: self.contentView.leftAnchor, constant: 1),
+            self.selectionBackground2View.topAnchor.constraint(greaterThanOrEqualTo: self.contentView.topAnchor, constant: config.customSelectionViewSpacing),
+            self.selectionBackground2View.rightAnchor.constraint(lessThanOrEqualTo: self.contentView.rightAnchor, constant: -1),
+            self.selectionBackground2View.bottomAnchor.constraint(lessThanOrEqualTo: self.contentView.bottomAnchor, constant: -config.customSelectionViewSpacing),
+            self.selectionBackground2View.centerXAnchor.constraint(equalTo: self.contentView.centerXAnchor),
+            self.selectionBackground2View.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+            self.selectionBackground2View.widthAnchor.constraint(equalTo: self.selectionBackground2View.heightAnchor)
+        ])
+        
         self.rangeViewTopAnchorConstraints = [
             self.backgroundRangeView.topAnchor.constraint(equalTo: self.contentView.topAnchor, constant: inset)
         ]
@@ -287,6 +313,7 @@ final class DayCell: JTACDayCell {
     internal func configure(for config: ViewConfig) {
 
         self.selectionBackgroundView.isHidden = config.isSelectedViewHidden
+        self.selectionBackground2View.isHidden = config.isSelectedViewHidden
         self.isUserInteractionEnabled = config.dateLabelText != nil && config.isDateEnabled
         self.clipsToBounds = config.dateLabelText == nil
 
@@ -381,7 +408,7 @@ final class DayCell: JTACDayCell {
             self.circleView.layer.borderColor = todayConfig.circleViewSelectedColor.cgColor
         } else if !viewConfig.rangeView.isHidden {
             self.dateLabel.textColor = todayConfig.onRangeLabelColor
-            self.circleView.layer.borderColor = todayConfig.onRangeLabelColor.cgColor
+            self.circleView.layer.borderColor = todayConfig.onRangeCircleViewColor.cgColor
         } else {
             self.dateLabel.textColor = todayConfig.dateLabelColor
             self.circleView.layer.borderColor = todayConfig.circleViewColor.cgColor
@@ -445,6 +472,8 @@ public extension FastisConfig {
          Default value — `.white`
          */
         public var selectedLabelColor: UIColor = .white
+        
+        public var background: UIColor = .white
 
         /**
          Corner radius of cell when date is a start or end of selected range
@@ -466,6 +495,8 @@ public extension FastisConfig {
          Default value — `.label`
          */
         public var onRangeLabelColor: UIColor = .black
+        
+        public var onRangeCircleViewColor: UIColor = .black
 
         /**
          Inset of cell's background view when date is a part of selected range
@@ -482,6 +513,8 @@ public extension FastisConfig {
           Default value — `nil`
          */
         public var customSelectionViewCornerRadius: CGFloat?
+        
+        public var customSelectionViewSpacing: CGFloat = 1
     }
 
     final class TodayCell: DayCell {

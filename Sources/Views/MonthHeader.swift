@@ -60,11 +60,11 @@ final class MonthHeader: JTACMonthReusableView {
         NSLayoutConstraint.activate([
             self.monthLabel.leftAnchor.constraint(equalTo: self.leftAnchor),
             self.monthLabel.rightAnchor.constraint(equalTo: self.rightAnchor),
-            self.monthLabel.topAnchor.constraint(equalTo: self.topAnchor, constant: 6)
+            self.monthLabel.topAnchor.constraint(equalTo: self.topAnchor)
         ].compactMap({ $0 }))
         
         NSLayoutConstraint.activate([
-            self.weekView.topAnchor.constraint(equalTo: self.monthLabel.bottomAnchor, constant: 16),
+            self.weekView.topAnchor.constraint(equalTo: self.monthLabel.bottomAnchor, constant: 12),
             self.weekView.leftAnchor.constraint(equalTo: self.leftAnchor),
             self.weekView.rightAnchor.constraint(equalTo: self.rightAnchor),
             self.weekView.bottomAnchor.constraint(equalTo: self.bottomAnchor)
