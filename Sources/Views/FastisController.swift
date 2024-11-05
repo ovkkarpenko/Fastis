@@ -253,6 +253,8 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         }
     }
 
+    public var didClose: (() -> Void)? = nil
+    
     // MARK: - Lifecycle
 
     /// Initiate FastisController
@@ -280,6 +282,12 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         self.configureInitialState()
     }
 
+    override open func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        showBottomSheet()
+    }
+    
     override open func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
@@ -315,7 +323,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         super.touchesEnded(touches, with: event)
 
         if touches.first?.view == view {
-            cancel()
+            hideBottomSheet()
         }
     }
     
@@ -354,6 +362,9 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         self.bottomDoneButton.layer.cornerRadius = 12
         self.bottomDoneButton.backgroundColor = config.controller.bottomDoneButtonBackground
         self.bottomDoneButton.setTitleColor(config.dayCell.dateLabelUnavailableColor, for: .disabled)
+        
+        view.layoutIfNeeded()
+        view.transform = CGAffineTransform(translationX: 0, y: view.bounds.height)
     }
 
     private func configureSubviews() {
@@ -537,11 +548,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     }
 
     @objc
-    private func cancel() {
-        self.dismiss(animated: true)
-    }
-
-    @objc
     private func done() {
         self.isDone = true
         self.dismiss(animated: true)
@@ -559,18 +565,18 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
 
         switch gestureRecognizer.state {
         case .began:
-            containerView.transform = .identity
+            view.transform = .identity
 
         case .changed:
             guard translation.y > 0 else { return }
 
-            containerView.transform = CGAffineTransform(translationX: 0, y: translation.y)
+            view.transform = CGAffineTransform(translationX: 0, y: translation.y)
 
         case .ended:
             if translation.y > 100 {
-                cancel()
+                hideBottomSheet()
             } else {
-                showBottomSheet()
+                showBottomSheet(damping: 0.6)
             }
 
         default:
@@ -578,9 +584,32 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         }
     }
 
-    private func showBottomSheet() {
-        UIView.animate(withDuration: 0.3) {
-            self.containerView.transform = .identity
+    private func hideBottomSheet() {
+        didClose?()
+        
+        UIView.animate(
+            withDuration: 0.4,
+            delay: 0,
+            usingSpringWithDamping: 0.8,
+            initialSpringVelocity: 1.9,
+            options: [.curveEaseOut],
+            animations: {
+                self.view.transform = CGAffineTransform(translationX: 0, y: self.view.bounds.height)
+            }, completion: { _ in
+                self.dismiss(animated: false)
+            }
+        )
+    }
+    
+    private func showBottomSheet(damping: CGFloat = 0.8) {
+        UIView.animate(
+            withDuration: 0.3,
+            delay: 0,
+            usingSpringWithDamping: 0.8,
+            initialSpringVelocity: 1.9,
+            options: [.curveEaseIn]
+        ) {
+            self.view.transform = .identity
         }
     }
 
