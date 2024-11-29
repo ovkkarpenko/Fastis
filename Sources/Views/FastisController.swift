@@ -346,7 +346,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
 
         self.resetButton.titleLabel?.font = config.dayCell.dateLabelFont
         self.doneButton.titleLabel?.font = config.dayCell.dateLabelFont
-        self.bottomDoneButton.titleLabel?.font = config.monthHeader.labelFont
+        self.bottomDoneButton.titleLabel?.font = config.controller.bottomDoneButtonFont
         
         self.resetButton.setTitleColor(config.dayCell.selectedBackgroundColor, for: .normal)
         self.doneButton.setTitleColor(config.dayCell.selectedBackgroundColor, for: .normal)
@@ -952,6 +952,7 @@ public extension FastisConfig {
         public var doneButtonTitle: String? = "Готово"
         
         public var bottomDoneButtonTitle: String?
+        public var bottomDoneButtonFont: UIFont?
         public var bottomDoneButtonTextColor: UIColor = .white
         public var bottomDoneButtonBackground: UIColor = .green
 
