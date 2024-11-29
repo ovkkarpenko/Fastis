@@ -111,6 +111,8 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         let button = UIButton()
         button.setTitle(config.controller.bottomDoneButtonTitle, for: .normal)
         button.addTarget(self, action: #selector(bottomDone), for: .touchUpInside)
+        button.addTarget(self, action: #selector(bottomDoneDown), for: .touchDown)
+        button.addTarget(self, action: #selector(bottomDoneCalcel), for: .touchCancel)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -555,8 +557,19 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     
     @objc
     private func bottomDone() {
+        doneButton.backgroundColor = config.controller.bottomDoneButtonBackground
         self.isDone = true
         self.dismiss(animated: true)
+    }
+    
+    @objc
+    private func bottomDoneDown() {
+        doneButton.backgroundColor = config.controller.bottomDoneButtonHighlightedBackground
+    }
+    
+    @objc
+    private func bottomDoneCalcel() {
+        doneButton.backgroundColor = config.controller.bottomDoneButtonBackground
     }
     
     @objc
@@ -955,6 +968,7 @@ public extension FastisConfig {
         public var bottomDoneButtonFont: UIFont?
         public var bottomDoneButtonTextColor: UIColor = .white
         public var bottomDoneButtonBackground: UIColor = .green
+        public var bottomDoneButtonHighlightedBackground: UIColor = .green
 
         /**
          Controller's background color
