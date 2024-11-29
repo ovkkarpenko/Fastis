@@ -108,11 +108,10 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     }()
     
     private lazy var bottomDoneButton: UIButton = {
-        let button = UIButton()
+        let button = UIButton(type: .system)
         button.setTitle(config.controller.bottomDoneButtonTitle, for: .normal)
         button.addTarget(self, action: #selector(bottomDone), for: .touchUpInside)
-        button.addTarget(self, action: #selector(bottomDoneDown), for: .touchDown)
-        button.addTarget(self, action: #selector(bottomDoneCalcel), for: .touchCancel)
+        button.addTarget(self, action: #selector(bottomDoneAll), for: .allEvents)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -563,8 +562,14 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     }
     
     @objc
-    private func bottomDoneDown() {
-        doneButton.backgroundColor = config.controller.bottomDoneButtonHighlightedBackground
+    private func bottomDoneAll() {
+        UIView.animate(withDuration: 0.3) { [weak self] in
+            guard let self = self else { return }
+            
+            self.bottomDoneButton.backgroundColor = self.bottomDoneButton.isHighlighted
+                ? self.config.controller.bottomDoneButtonHighlightedBackground
+                : self.config.controller.bottomDoneButtonBackground
+        }
     }
     
     @objc
