@@ -407,7 +407,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             self.bottomView.topAnchor.constraint(equalTo: self.containerView.bottomAnchor),
             self.bottomView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
             self.bottomView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            self.bottomView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+            self.bottomView.heightAnchor.constraint(equalToConstant: 300)
         ])
                                     
         if config.controller.onlyCurrentMonth {
