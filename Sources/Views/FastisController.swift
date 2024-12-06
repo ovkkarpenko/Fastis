@@ -397,14 +397,14 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             NSLayoutConstraint.activate([
                 self.containerView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
                 self.containerView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-                self.containerView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+                self.containerView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor)
             ])
         } else {
             NSLayoutConstraint.activate([
                 self.containerView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 48),
                 self.containerView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
                 self.containerView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-                self.containerView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+                self.containerView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor)
             ])
         }
         
