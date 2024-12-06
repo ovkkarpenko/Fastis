@@ -90,6 +90,12 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         return view
     }()
     
+    private lazy var bottomView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private lazy var resetButton: UIButton = {
         let button = UIButton()
         button.setTitle(config.controller.cancelButtonTitle, for: .normal)
@@ -366,6 +372,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         
         view.layoutIfNeeded()
         view.transform = CGAffineTransform(translationX: 0, y: view.bounds.height)
+        bottomView.transform = CGAffineTransform(translationX: 0, y: view.bounds.height)
     }
 
     private func configureSubviews() {
@@ -391,8 +398,15 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             self.containerView.addSubview(self.shortcutContainerView)
         }
     }
-
+    
     private func configureConstraints() {
+        NSLayoutConstraint.activate([
+            self.bottomView.topAnchor.constraint(equalTo: self.containerView.bottomAnchor),
+            self.bottomView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+            self.bottomView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+            self.bottomView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+        ])
+                                    
         if config.controller.onlyCurrentMonth {
             NSLayoutConstraint.activate([
                 self.containerView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
@@ -584,12 +598,14 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         switch gestureRecognizer.state {
         case .began:
             view.transform = .identity
+            bottomView.transform = .identity
 
         case .changed:
             guard translation.y > 0 else { return }
 
             view.transform = CGAffineTransform(translationX: 0, y: translation.y)
-
+            bottomView.transform = CGAffineTransform(translationX: 0, y: translation.y)
+            
         case .ended:
             if translation.y > 100 {
                 hideBottomSheet()
@@ -613,6 +629,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             options: [.curveEaseOut],
             animations: {
                 self.view.transform = CGAffineTransform(translationX: 0, y: self.view.bounds.height)
+                self.bottomView.transform = CGAffineTransform(translationX: 0, y: self.view.bounds.height)
             }, completion: { _ in
                 self.dismiss(animated: false)
             }
@@ -628,6 +645,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             options: [.curveEaseIn]
         ) {
             self.view.transform = .identity
+            self.bottomView.transform = .identity
         }
     }
 
