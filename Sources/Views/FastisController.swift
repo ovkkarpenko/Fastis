@@ -393,6 +393,8 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             self.containerView.addSubview(bottomDoneButton)
         }
         
+        self.containerView.addSubview(self.bottomView)
+        
         self.containerView.addSubview(self.calendarView)
         if !self.shortcuts.isEmpty {
             self.containerView.addSubview(self.shortcutContainerView)
