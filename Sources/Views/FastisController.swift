@@ -377,6 +377,8 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     }
 
     private func configureSubviews() {
+        self.containerView.addSubview(self.bottomView)
+        
         self.calendarView.register(DayCell.self, forCellWithReuseIdentifier: self.dayCellReuseIdentifier)
         self.calendarView.register(
             MonthHeader.self,
@@ -394,8 +396,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             self.containerView.addSubview(bottomDoneButton)
         }
         
-        self.containerView.addSubview(self.bottomView)
-        
         self.containerView.addSubview(self.calendarView)
         if !self.shortcuts.isEmpty {
             self.containerView.addSubview(self.shortcutContainerView)
@@ -404,7 +404,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     
     private func configureConstraints() {
         NSLayoutConstraint.activate([
-            self.bottomView.topAnchor.constraint(equalTo: self.containerView.bottomAnchor),
+            self.bottomView.topAnchor.constraint(equalTo: self.containerView.bottomAnchor, constant: -150),
             self.bottomView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
             self.bottomView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
             self.bottomView.heightAnchor.constraint(equalToConstant: 300)
