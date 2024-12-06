@@ -346,7 +346,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         self.bottomView.backgroundColor = self.appearance.backgroundColor
         self.containerView.layer.cornerRadius = 12
         self.containerView.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMinXMinYCorner]
-        self.containerView.addGestureRecognizer(panGestureRecognizer)
+        self.view.addGestureRecognizer(panGestureRecognizer)
         
         self.headerView.backgroundColor = self.appearance.backgroundColor
         self.headerView.layer.cornerRadius = 12
