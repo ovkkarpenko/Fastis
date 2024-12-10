@@ -45,6 +45,13 @@ import UIKit
  }
  ```
  */
+
+public protocol FastisControllerDelegate: AnyObject {
+    func fastisControllerDidSelectNoDates()
+    func fastisControllerDidSelectSameDates()
+    func fastisControllerDidSelectUnavailableDates()
+}
+
 open class FastisController<Value: FastisValue>: UIViewController, JTACMonthViewDelegate, JTACMonthViewDataSource {
 
     open override var modalTransitionStyle: UIModalTransitionStyle {
@@ -65,10 +72,9 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     
     // MARK: - Outlets
 
-    
-    
     private lazy var calendarView: JTACMonthView = {
         let monthView = JTACMonthView()
+        monthView.isScrollEnabled = false
         monthView.translatesAutoresizingMaskIntoConstraints = false
         monthView.backgroundColor = self.appearance.backgroundColor
         monthView.ibCalendarDelegate = self
@@ -205,6 +211,8 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
      */
     public var shortcuts: [FastisShortcut<Value>] = []
 
+    public weak var delegate: FastisControllerDelegate?
+    
     /**
      Allow to choose `nil` date
 
@@ -260,9 +268,8 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         }
     }
     
-    public var availableDays: [Date] = [] {
-        didSet { calendarView.reloadData() }
-    }
+    public var availableDays: [Date] = []
+    public var selectedDates: [FastisRange] = []
 
     public var didClose: (() -> Void)? = nil
     
@@ -292,7 +299,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         self.configureConstraints()
         self.configureInitialState()
     }
-
+    
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
@@ -468,9 +475,26 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             ])
             
             if config.controller.onlyCurrentMonth {
-                NSLayoutConstraint.activate([
-                    self.calendarView.heightAnchor.constraint(equalToConstant: 290)
-                ])
+                let calendar = Calendar.current
+                
+                if let minimumDate = minimumDate,
+                   let daysCount = calendar.range(of: .day, in: .month, for: minimumDate)?.count {
+                    let dayName = getWeekdayNamesForFirstDayOfMonth(from: minimumDate)
+                    
+                    if (dayName == "неділя" && daysCount >= 30) || dayName == "субота" && daysCount >= 31 {
+                        NSLayoutConstraint.activate([
+                            self.calendarView.heightAnchor.constraint(equalToConstant: 334)
+                        ])
+                    } else {
+                        NSLayoutConstraint.activate([
+                            self.calendarView.heightAnchor.constraint(equalToConstant: 290)
+                        ])
+                    }
+                } else {
+                    NSLayoutConstraint.activate([
+                        self.calendarView.heightAnchor.constraint(equalToConstant: 290)
+                    ])
+                }
             }
             
             NSLayoutConstraint.activate([
@@ -505,6 +529,26 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         }
     }
 
+    private func getWeekdayNamesForFirstDayOfMonth(from date: Date) -> String {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month], from: date)
+        
+        guard let startOfMonth = calendar.date(from: components) else {
+            return ("Невідомо")
+        }
+
+        let firstDayWeekday = calendar.component(.weekday, from: startOfMonth)
+        let secondDayWeekday = calendar.component(.weekday, from: calendar.date(byAdding: .day, value: 1, to: startOfMonth)!)
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "uk_UA")
+        formatter.dateFormat = "EEEE"
+
+        let firstDayName = formatter.string(from: calendar.date(from: components)!)
+
+        return firstDayName
+    }
+    
     private func configureInitialState() {
         self.value = self.initialValue
         if let date = self.value as? Date {
@@ -578,6 +622,26 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     
     @objc
     private func bottomDone() {
+        guard let value = value as? FastisRange else {
+            delegate?.fastisControllerDidSelectNoDates()
+            return
+        }
+        
+        if value.fromDate == nil && value.toDate == nil {
+            delegate?.fastisControllerDidSelectNoDates()
+            return
+        }
+        
+        if checkDatesRange(newRange: value, to: selectedDates) {
+            delegate?.fastisControllerDidSelectSameDates()
+            return
+        }
+        
+        if checkForUnavailableDates(newRange: value, datesAvailable: availableDays) {
+            delegate?.fastisControllerDidSelectUnavailableDates()
+            return
+        }
+        
         doneButton.backgroundColor = config.controller.bottomDoneButtonBackground
         self.isDone = true
         self.dismiss(animated: true)
@@ -597,6 +661,54 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     @objc
     private func bottomDoneCalcel() {
         doneButton.backgroundColor = config.controller.bottomDoneButtonBackground
+    }
+    
+    private func checkDatesRange(newRange: FastisRange, to existingRanges: [FastisRange]) -> Bool {
+        for existingRange in existingRanges {
+            if newRange.fromDate <= existingRange.toDate && newRange.toDate >= existingRange.fromDate {
+                return true
+            } else if newRange.fromDate <= existingRange.toDate && newRange.fromDate >= existingRange.fromDate {
+                return true
+            } else if newRange.toDate >= existingRange.fromDate && newRange.toDate <= existingRange.toDate {
+                return true
+            }
+        }
+
+        if !availableDays.isEmpty {
+            return availableDays.contains { date in
+                newRange.fromDate >= date && newRange.toDate <= date
+            }
+        }
+
+        return false
+    }
+
+    private func checkForUnavailableDates(newRange: FastisRange, datesAvailable: [Date]) -> Bool {
+        guard !datesAvailable.isEmpty else {
+            return false
+        }
+
+        let calendar = Calendar.current
+
+        guard
+            let dateRange = calendar.dateInterval(of: .day, for: newRange.fromDate)
+        else { return true }
+
+        var currentDate = dateRange.start
+
+        while currentDate <= newRange.toDate {
+            if !datesAvailable.contains(currentDate) {
+                return true
+            }
+
+            if let date: Date = calendar.date(byAdding: .day, value: 1, to: currentDate) {
+                currentDate = date
+            } else {
+                return true
+            }
+        }
+
+        return false
     }
     
     @objc
@@ -793,7 +905,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             hasStrictBoundaries: true
         )
     }
-
+    
     public func calendar(
         _ calendar: JTACMonthView,
         headerViewForDateRange range: (start: Date, end: Date),
@@ -899,7 +1011,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     public func calendarSizeForMonths(_ calendar: JTACMonthView?) -> MonthSize? {
         self.config.monthHeader.height
     }
-
 }
 
 public extension FastisController where Value == FastisRange {
