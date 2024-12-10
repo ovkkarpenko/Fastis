@@ -259,6 +259,10 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             self.privateMaximumDate = newValue?.endOfDay(in: self.config.calendar)
         }
     }
+    
+    public var availableDays: [Date] = [] {
+        didSet { calendarView.reloadData() }
+    }
 
     public var didClose: (() -> Void)? = nil
     
@@ -303,7 +307,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         } else {
             self.dismissHandler?(.cancel)
         }
-
     }
 
     /**
@@ -523,6 +526,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
 
     private func configureCell(_ cell: JTACDayCell, forItemAt date: Date, cellState: CellState, indexPath: IndexPath) {
         guard let cell = cell as? DayCell else { return }
+        
         if let cachedConfig = self.viewConfigs[indexPath] {
             cell.configure(for: cachedConfig)
         } else {
@@ -530,6 +534,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
                 for: cellState,
                 minimumDate: self.privateMinimumDate,
                 maximumDate: self.privateMaximumDate,
+                availableDays: self.availableDays,
                 rangeValue: self.value as? FastisRange,
                 calendar: self.config.calendar
             )
