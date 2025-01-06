@@ -48,7 +48,7 @@ public struct FastisConfig {
      config.todayCell.circleViewUnavailableColor = .cyan
      ```
      */
-    public static var `default` = FastisConfig()
+    nonisolated(unsafe) public static var `default` = FastisConfig()
 
     private init() { }
 
