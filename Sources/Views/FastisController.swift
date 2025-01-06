@@ -46,6 +46,7 @@ import UIKit
  ```
  */
 
+@MainActor
 public protocol FastisControllerDelegate: AnyObject {
     func fastisControllerDidSelectNoDates()
     func fastisControllerDidSelectSameDates()
