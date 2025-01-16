@@ -318,6 +318,8 @@ final class DayCell: JTACDayCell {
         self.isUserInteractionEnabled = config.dateLabelText != nil && config.isDateEnabled
         self.clipsToBounds = config.dateLabelText == nil
 
+        self.dateLabel.font = config.dateFont
+        
         if let dateLabelText = config.dateLabelText {
             self.dateLabel.isHidden = false
             self.dateLabel.text = dateLabelText
@@ -331,8 +333,6 @@ final class DayCell: JTACDayCell {
         } else {
             self.dateLabel.isHidden = true
         }
-        
-        self.dateLabel.font = config.dateFont
         
         self.backgroundRangeView.isHidden = false
         self.backgroundRangeView.layer.maskedCorners = []

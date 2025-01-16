@@ -628,11 +628,6 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             return
         }
         
-        if value.fromDate == nil && value.toDate == nil {
-            delegate?.fastisControllerDidSelectNoDates()
-            return
-        }
-        
         if checkDatesRange(newRange: value, to: selectedDates) {
             delegate?.fastisControllerDidSelectSameDates()
             return
