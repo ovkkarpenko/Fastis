@@ -75,7 +75,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
 
     private lazy var calendarView: JTACMonthView = {
         let monthView = JTACMonthView()
-        monthView.isScrollEnabled = false
+        monthView.isScrollEnabled = true
         monthView.translatesAutoresizingMaskIntoConstraints = false
         monthView.backgroundColor = self.appearance.backgroundColor
         monthView.ibCalendarDelegate = self
@@ -350,6 +350,8 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     private func configureUI() {
         self.view.backgroundColor = .clear
         self.navigationItem.largeTitleDisplayMode = .never
+        
+        self.calendarView.isScrollEnabled = self.config.controller.isScrollEnabled
         
         self.panGestureRecognizer.addTarget(self, action: #selector(handlePanGesture(_:)))
         
@@ -1095,6 +1097,8 @@ public extension FastisConfig {
          */
         public var cancelButtonTitle: String? = "Скинути"
 
+        public var isScrollEnabled: Bool = true
+        
         /**
          Done button title
 
