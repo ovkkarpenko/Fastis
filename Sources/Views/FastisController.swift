@@ -583,6 +583,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
                 maximumDate: self.privateMaximumDate,
                 availableDays: self.availableDays,
                 rangeValue: self.value as? FastisRange,
+                onlyAvailableDates: self.config.controller.onlyAvailableDates,
                 calendar: self.config.calendar
             )
 
@@ -1105,6 +1106,8 @@ public extension FastisConfig {
          Default value — `"Done"`
          */
         public var doneButtonTitle: String? = "Готово"
+        
+        public var onlyAvailableDates: Bool = false
         
         public var bottomDoneButtonTitle: String?
         public var bottomDoneButtonFont: UIFont?
