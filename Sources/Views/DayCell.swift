@@ -230,16 +230,14 @@ final class DayCell: JTACDayCell {
 
         config.dateLabelText = state.text
 
-        if onlyAvailableDates {
-            if let minimumDate, state.date < minimumDate.startOfDay(in: calendar) {
-                config.isDateEnabled = false
-            } else if let maximumDate, state.date > maximumDate.endOfDay(in: calendar) {
-                config.isDateEnabled = false
-            } else if !availableDays.isEmpty && !availableDays.contains(state.date) {
-                config.isDateEnabled = false
-            } else if availableDays.isEmpty {
-                config.isDateEnabled = false
-            }
+        if let minimumDate, state.date < minimumDate.startOfDay(in: calendar) {
+            config.isDateEnabled = false
+        } else if let maximumDate, state.date > maximumDate.endOfDay(in: calendar) {
+            config.isDateEnabled = false
+        } else if onlyAvailableDates && !availableDays.isEmpty && !availableDays.contains(state.date) {
+            config.isDateEnabled = false
+        } else if onlyAvailableDates && availableDays.isEmpty {
+            config.isDateEnabled = false
         }
 
         if state.isSelected {
