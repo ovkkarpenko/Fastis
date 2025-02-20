@@ -1121,7 +1121,7 @@ public extension FastisConfig {
 
          Default value — `.systemBackground`
          */
-        public var backgroundColor: UIColor = .systemBackground
+        public var backgroundColor: UIColor = .clear
 
         /**
          Bar button items tint color
