@@ -341,7 +341,8 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         super.touchesEnded(touches, with: event)
 
         if touches.first?.view == view {
-            hideBottomSheet()
+            didClose?()
+            dismiss(animated: true)
         }
     }
     
