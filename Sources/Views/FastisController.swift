@@ -432,7 +432,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
             ])
         } else {
             NSLayoutConstraint.activate([
-                self.containerView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 48),
+                self.containerView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: config.controller.topOffset),
                 self.containerView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
                 self.containerView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
                 self.containerView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor)
@@ -1124,6 +1124,8 @@ public extension FastisConfig {
         public var doneButtonTitle: String? = "Готово"
         
         public var onlyAvailableDates: Bool = false
+        
+        public var topOffset: CGFloat = 48
         
         public var bottomDoneButtonTitle: String?
         public var bottomDoneButtonFont: UIFont?
