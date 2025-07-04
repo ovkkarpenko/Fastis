@@ -627,19 +627,34 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
     
     @objc
     private func bottomDone() {
-        guard let value = value as? FastisRange else {
-            delegate?.fastisControllerDidSelectNoDates()
-            return
-        }
-        
-        if checkDatesRange(newRange: value, to: selectedDates) {
-            delegate?.fastisControllerDidSelectSameDates()
-            return
-        }
-        
-        if checkForUnavailableDates(newRange: value, datesAvailable: availableDays) {
-            delegate?.fastisControllerDidSelectUnavailableDates()
-            return
+        switch Value.mode {
+        case .single:
+            guard let value = value as? Date else {
+                delegate?.fastisControllerDidSelectNoDates()
+                return
+            }
+            
+            if checkForUnavailableDates(newRange: FastisRange(from: value, to: value), datesAvailable: availableDays) {
+                delegate?.fastisControllerDidSelectUnavailableDates()
+                return
+            }
+            
+        case .range:
+            guard let value = value as? FastisRange else {
+                delegate?.fastisControllerDidSelectNoDates()
+                return
+            }
+            
+            if checkDatesRange(newRange: value, to: selectedDates) {
+                delegate?.fastisControllerDidSelectSameDates()
+                return
+            }
+            
+            if checkForUnavailableDates(newRange: value, datesAvailable: availableDays) {
+                delegate?.fastisControllerDidSelectUnavailableDates()
+                return
+            }
+            
         }
         
         doneButton.backgroundColor = config.controller.bottomDoneButtonBackground
