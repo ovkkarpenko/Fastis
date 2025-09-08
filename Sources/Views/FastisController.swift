@@ -639,6 +639,11 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
                 return
             }
             
+            if self.initialValue as? Date == value {
+                delegate?.fastisControllerDidSelectSameDates()
+                return
+            }
+            
         case .range:
             guard let value = value as? FastisRange else {
                 delegate?.fastisControllerDidSelectNoDates()
