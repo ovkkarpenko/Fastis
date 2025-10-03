@@ -897,7 +897,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         if let maximumDate = self.privateMaximumDate,
            let endOfNextMonth = self.config.calendar.date(byAdding: .weekday, value: 2, to: maximumDate)?
             .endOfMonth(in: self.config.calendar) {
-            if self.config.controller.onlyCurrentMonth {
+            if self.config.controller.onlyCurrentMonth || self.config.controller.onlyProvidedDates {
                 endDate = maximumDate
             } else {
                 endDate = endOfNextMonth
@@ -907,7 +907,7 @@ open class FastisController<Value: FastisValue>: UIViewController, JTACMonthView
         if let minimumDate = self.privateMinimumDate,
            let startOfPreviousMonth = self.config.calendar.date(byAdding: .weekday, value: -2, to: minimumDate)?
             .startOfMonth(in: self.config.calendar) {
-            if self.config.controller.onlyCurrentMonth {
+            if self.config.controller.onlyCurrentMonth || self.config.controller.onlyProvidedDates {
                 startDate = minimumDate
             } else {
                 startDate = startOfPreviousMonth
@@ -1171,6 +1171,8 @@ public extension FastisConfig {
         public var customDoneButton: UIBarButtonItem?
         
         public var onlyCurrentMonth: Bool = false
+        
+        public var onlyProvidedDates: Bool = false
     }
 }
 
